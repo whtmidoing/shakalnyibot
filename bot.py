@@ -10,7 +10,7 @@ global chatid
 global username
 global fname
 balance = 0
-bot = telebot.TeleBot("token")
+bot = telebot.TeleBot("1626053042:AAEZx2S8HKPS2VYJZ0XHtCBiDkIJ4m1vbY4")
 db = sqlite3.connect("bot.db", check_same_thread=False)
 sql = db.cursor()
 
