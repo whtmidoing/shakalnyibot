@@ -32,7 +32,7 @@ def start_message(message):
 @bot.message_handler(commands=['send'])
 def start_message(message):
 	try:
-		if message.chat.id == 1364461919:
+		if message.chat.id == adminid:
 			msg = bot.send_message(message.chat.id, "Введи айди, сообщение, кол-во раз")
 			bot.register_next_step_handler(msg, sendmsg)
 		else:
