@@ -1,3 +1,4 @@
+-*- coding: utf-8 -*-
 import telebot, random, PIL, sqlite3, os, requests, moviepy, asyncio, time
 from PIL import Image, ImageFilter
 from telebot import types
