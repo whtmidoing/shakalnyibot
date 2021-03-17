@@ -9,7 +9,9 @@ global picid
 global chatid
 global username
 global fname
+global queue
 balance = 0
+queue = []
 bot = telebot.TeleBot("1626053042:AAEZx2S8HKPS2VYJZ0XHtCBiDkIJ4m1vbY4")
 db = sqlite3.connect("bot.db", check_same_thread=False)
 sql = db.cursor()
@@ -22,12 +24,12 @@ db.commit()
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-	bot.send_message(message.chat.id, 'Привет, отправь мне картинку или видео которое надо зашакалить.')
+	bot.send_message(message.chat.id, 'Привет, отправь мне картинку или видео которое надо зашакалить. \nСурс код бота: https://github.com/whtmidoing/shakalnyibot/blob/main/bot.py')
 
 
 @bot.message_handler(commands=['help'])
 def start_message(message):
-	bot.send_message(message.chat.id, 'Это небольшой бот для шакала картинок и видео. С его помощью вы сможете делать постиронию для поднятия настроения.\n\n Мы гарантируем анонимность ваших шакалов т.к. они сразу удаляются после отправления вам. Приятного использования!')
+	bot.send_message(message.chat.id, 'Это небольшой бот для шакала картинок. С его помощью вы сможете делать постироничные пикчи для поднятия настроения.\n\n Мы гарантируем анонимность ваших шакалов т.к. они сразу удаляются после отправления вам. Приятного использования!')
 
 @bot.message_handler(commands=['send'])
 def start_message(message):
@@ -97,30 +99,39 @@ def getvideo(message):
 	global vidheight
 	global currentproc
 
-	if message.video.file_size > 20971520:
-		bot.send_message(message.chat.id, "Вес видео не должен превышать 20 мегабайт (ограничения телеграма ¯\_(ツ)_/¯)")
-	else:
-		bot.send_message(message.chat.id, "Загружаем видео...")
-		vidwidth = message.video.width
-		vidheight = message.video.height
-		File_ID = message.video.file_id
-		file_info = bot.get_file(File_ID)
-		downloaded_file = bot.download_file(file_info.file_path)
-		vidid = message.chat.id
+	if str(message.chat.id) in queue:
+		print(queue)
+		bot.send_message(message.chat.id, 'У тебя уже обрабатывается видео')
+	elif str(message.chat.id) not in queue:
+		print(queue)
+		if message.video.file_size > 20971520:
+			bot.send_message(message.chat.id, "Вес видео не должен превышать 20 мегабайт (ограничения телеграма ¯\_(ツ)_/¯)")
+		else:
+			if message.video.duration > 20:
+				bot.send_message(message.chat.id, 'Длина видео превышает 20 секунд. Обработка видео может занять больше времени.')
+			else:
+				pass
+			bot.send_message(message.chat.id, "Загружаем видео...")
+			vidwidth = message.video.width
+			vidheight = message.video.height
+			File_ID = message.video.file_id
+			file_info = bot.get_file(File_ID)
+			downloaded_file = bot.download_file(file_info.file_path)
+			vidid = message.chat.id
 
-		with open(f"{vidid}.mov", 'wb') as new_file:
-			new_file.write(downloaded_file)
+			with open(f"{vidid}.mov", 'wb') as new_file:
+				new_file.write(downloaded_file)
 
-		print(f'Сохранено видео юзера {vidid}.mp4')
+			print(f'Сохранено видео юзера {vidid}.mp4')
 
-		keyboard = types.InlineKeyboardMarkup()
-		item1 = types.InlineKeyboardButton("2x", callback_data='vid2')
-		item2 = types.InlineKeyboardButton("3x", callback_data='vid3')
-		item3 = types.InlineKeyboardButton("5x (опасно)", callback_data='vid5')
-		item4 = types.InlineKeyboardButton("10x (очень опасно)", callback_data='vid10')
-		keyboard.add(item1, item2, item3, item4)
+			keyboard = types.InlineKeyboardMarkup()
+			item1 = types.InlineKeyboardButton("2x", callback_data='vid2')
+			item2 = types.InlineKeyboardButton("3x", callback_data='vid3')
+			item3 = types.InlineKeyboardButton("5x (опасно)", callback_data='vid5')
+			item4 = types.InlineKeyboardButton("10x (очень опасно)", callback_data='vid10')
+			keyboard.add(item1, item2, item3, item4)
 
-		bot.send_message(message.chat.id, "Выбери степень шакалистости", reply_markup=keyboard)
+			bot.send_message(message.chat.id, "Выбери степень шакалистости", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
 def sahakal(call):
@@ -162,6 +173,8 @@ def sahakal(call):
 			print(f'Создан {balance + 1}-ый шакал {call.message.chat.id}.jpg юзером {call.message.chat.username}({call.message.chat.id})')
 			bot.edit_message_text(chat_id=chatid, message_id=msgid, text=f"Шакалистость {shakalistost}x", reply_markup=None)
 		elif call.data[:3] == "vid":
+			queue.append(f'{str(call.message.chat.id)}')
+			print(queue)
 			shakalistost = int(call.data[3:])
 			bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Шакалистость {shakalistost}x. Ожидайте...", reply_markup=None)
 			video = VideoFileClip(f"{call.message.chat.id}.mov")
@@ -173,6 +186,8 @@ def sahakal(call):
 
 			vidfinal = open(f'{call.message.chat.id}.mp4', 'rb')
 			bot.send_video(call.message.chat.id, vidfinal)
+			queue.remove(f'{str(call.message.chat.id)}')
+			print(queue)
 			vidfinal.close()
 			time.sleep(0.5)
 			os.remove(f"{call.message.chat.id}.mov")
