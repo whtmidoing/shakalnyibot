@@ -53,11 +53,18 @@ def start_message(message):
 	bot.send_message(message.chat.id, f"Всего было создано {balance} шакала(-ов)")
 
 @bot.message_handler(commands=['queue'])
-def queuepos(message):
-	if str(message.chat.id) in queue:
-		bot.send_message(message.chat.id, f"Ваша текущая позиция в очереди: {int(len(queue)) - 1}")
-	elif str(message.chat.id) not in queue:
-		bot.send_message(message.chat.id, "Вы сейчас не находитесь в очереди")
+def toqueue(message):
+	asyncio.run(queuepos(message=message.text, chatid=message.chat.id))
+
+async def queuepos(message, chatid):
+	if str(chatid) in queue:
+		print(int(queue.index(str(chatid))))
+		if int(queue.index(str(chatid))) > 0:
+			bot.send_message(chatid, f"Ваша текущая позиция в очереди: {int(queue.index(str(chatid)))}")
+		else:
+			bot.send_message(chatid, f"Ваша текущая позиция в очереди: обрабатывается")
+	elif str(chatid) not in queue:
+		bot.send_message(chatid, "Вы сейчас не находитесь в очереди")
 
 
 def sendmsg(message):
