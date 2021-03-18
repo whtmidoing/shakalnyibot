@@ -15,7 +15,7 @@ global vidheight
 
 balance = 0
 queue = []
-bot = telebot.TeleBot("1626053042:AAEZx2S8HKPS2VYJZ0XHtCBiDkIJ4m1vbY4")
+bot = telebot.TeleBot("")
 db = sqlite3.connect("bot.db", check_same_thread=False)
 sql = db.cursor()
 
