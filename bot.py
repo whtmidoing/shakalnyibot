@@ -10,6 +10,9 @@ global chatid
 global username
 global fname
 global queue
+global vidwidth
+global vidheight
+
 balance = 0
 queue = []
 bot = telebot.TeleBot("1626053042:AAEZx2S8HKPS2VYJZ0XHtCBiDkIJ4m1vbY4")
@@ -108,30 +111,29 @@ def getvideo(message):
 			bot.send_message(message.chat.id, "Вес видео не должен превышать 20 мегабайт (ограничения телеграма ¯\_(ツ)_/¯)")
 		else:
 			if message.video.duration > 20:
-				bot.send_message(message.chat.id, 'Длина видео превышает 20 секунд. Обработка видео может занять больше времени.')
+				bot.send_message(message.chat.id, 'Длина видео превышает 20 секунд.')
 			else:
-				pass
-			bot.send_message(message.chat.id, "Загружаем видео...")
-			vidwidth = message.video.width
-			vidheight = message.video.height
-			File_ID = message.video.file_id
-			file_info = bot.get_file(File_ID)
-			downloaded_file = bot.download_file(file_info.file_path)
-			vidid = message.chat.id
+				bot.send_message(message.chat.id, "Загружаем видео...")
+				vidwidth = message.video.width
+				vidheight = message.video.height
+				File_ID = message.video.file_id
+				file_info = bot.get_file(File_ID)
+				downloaded_file = bot.download_file(file_info.file_path)
+				vidid = message.chat.id
 
-			with open(f"{vidid}.mov", 'wb') as new_file:
-				new_file.write(downloaded_file)
+				with open(f"{vidid}.mov", 'wb') as new_file:
+					new_file.write(downloaded_file)
 
-			print(f'Сохранено видео юзера {vidid}.mp4')
+				print(f'Сохранено видео юзера {vidid}.mp4')
 
-			keyboard = types.InlineKeyboardMarkup()
-			item1 = types.InlineKeyboardButton("2x", callback_data='vid2')
-			item2 = types.InlineKeyboardButton("3x", callback_data='vid3')
-			item3 = types.InlineKeyboardButton("5x (опасно)", callback_data='vid5')
-			item4 = types.InlineKeyboardButton("10x (очень опасно)", callback_data='vid10')
-			keyboard.add(item1, item2, item3, item4)
+				keyboard = types.InlineKeyboardMarkup()
+				item1 = types.InlineKeyboardButton("2x", callback_data='vid2')
+				item2 = types.InlineKeyboardButton("3x", callback_data='vid3')
+				item3 = types.InlineKeyboardButton("5x (опасно)", callback_data='vid5')
+				item4 = types.InlineKeyboardButton("10x (очень опасно)", callback_data='vid10')
+				keyboard.add(item1, item2, item3, item4)
 
-			bot.send_message(message.chat.id, "Выбери степень шакалистости", reply_markup=keyboard)
+				bot.send_message(message.chat.id, "Выбери степень шакалистости", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
 def sahakal(call):
@@ -176,14 +178,17 @@ def sahakal(call):
 			queue.append(f'{str(call.message.chat.id)}')
 			print(queue)
 			shakalistost = int(call.data[3:])
-			bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Шакалистость {shakalistost}x. Ожидайте...", reply_markup=None)
+			queuelen = int(len(queue))
+			bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Шакалистость {shakalistost}x. Обработка поставлена в очередь.\nПеред вами {queuelen - 1} шакалов.", reply_markup=None)
+			while int(queue.index(str(call.message.chat.id))) == 1:
+				time.sleep(1)
+				pass
 			video = VideoFileClip(f"{call.message.chat.id}.mov")
 			vidheight2 = vidheight // shakalistost
 			vidheight2 = int(vidheight2)
 			clip_resized = video.resize(height=vidheight2)
 			clip_resized.write_videofile(f"{call.message.chat.id}.mp4", bitrate='200k', audio_bitrate='20k', fps=20)
 			video.close()
-
 			vidfinal = open(f'{call.message.chat.id}.mp4', 'rb')
 			bot.send_video(call.message.chat.id, vidfinal)
 			queue.remove(f'{str(call.message.chat.id)}')
