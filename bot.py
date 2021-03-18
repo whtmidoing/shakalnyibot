@@ -32,7 +32,7 @@ def start_message(message):
 
 @bot.message_handler(commands=['help'])
 def start_message(message):
-	bot.send_message(message.chat.id, 'Это небольшой бот для шакала картинок. С его помощью вы сможете делать постироничные пикчи для поднятия настроения.\n\n Мы гарантируем анонимность ваших шакалов т.к. они сразу удаляются после отправления вам. Приятного использования!')
+	bot.send_message(message.chat.id, 'Это небольшой бот для шакала картинок и видео. С его помощью вы сможете делать постироничные мемы для поднятия настроения.\n\n Мы гарантируем анонимность ваших шакалов т.к. они сразу удаляются после отправления вам. Приятного использования!')
 
 @bot.message_handler(commands=['send'])
 def start_message(message):
@@ -51,6 +51,14 @@ def start_message(message):
 				balance = i[0]
 
 	bot.send_message(message.chat.id, f"Всего было создано {balance} шакала(-ов)")
+
+@bot.message_handler(commands=['queue'])
+def queuepos(message):
+	if str(message.chat.id) in queue:
+		bot.send_message(message.chat.id, f"Ваша текущая позиция в очереди: {int(len(queue)) - 1}")
+	elif str(message.chat.id) not in queue:
+		bot.send_message(message.chat.id, "Вы сейчас не находитесь в очереди")
+
 
 def sendmsg(message):
 	try:
@@ -110,8 +118,8 @@ def getvideo(message):
 		if message.video.file_size > 20971520:
 			bot.send_message(message.chat.id, "Вес видео не должен превышать 20 мегабайт (ограничения телеграма ¯\_(ツ)_/¯)")
 		else:
-			if message.video.duration > 20:
-				bot.send_message(message.chat.id, 'Длина видео превышает 20 секунд.')
+			if message.video.duration > 30:
+				bot.send_message(message.chat.id, 'Длина видео не должна превышать 30 секунд.')
 			else:
 				bot.send_message(message.chat.id, "Загружаем видео...")
 				vidwidth = message.video.width
